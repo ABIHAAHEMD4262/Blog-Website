@@ -1,7 +1,6 @@
 "use client"; // Ensure the component is client-rendered
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,

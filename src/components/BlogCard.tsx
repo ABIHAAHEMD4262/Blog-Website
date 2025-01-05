@@ -1,5 +1,4 @@
 import { urlFor } from "@/sanity/lib/image";
-import { post } from "@/sanity/schemaTypes/post"; // Ensure Post is imported correctly
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./ui/button";
