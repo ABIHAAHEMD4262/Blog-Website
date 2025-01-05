@@ -37,7 +37,7 @@ export default async function Page({ params }: PageProps) {
   const imageUrl = post.image ? urlFor(post.image).url() : "/fallback-image.jpg";
 
   return (
-    <article className="mt-12 mb-24 px-4 2xl:px-12 flex flex-col gap-y-8 bg-sky-950 text-white shadow-lg rounded-lg p-6">
+    <article className="px-4 2xl:px-12 flex flex-col gap-y-8 bg-sky-950 text-white shadow-lg rounded-lg p-6">
       {/* Post Title */}
       <h1 className="text-2xl xs:text-4xl lg:text-6xl font-bold">
         {post.title}
