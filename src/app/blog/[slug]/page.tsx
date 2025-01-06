@@ -1,31 +1,49 @@
-import Image from "next/image";
+import { SanityImageSource } from "@sanity/image-url/lib/types/types";
+import { PortableText, PortableTextBlock } from "@portabletext/react";
+import { components } from "@/components/CustomComponent";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
-import { PortableText } from "@portabletext/react";
-import { components } from "@/components/CustomComponent";
+import Image from "next/image";
 
-// Define the PageProps type for Next.js
 interface PageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>; // Mark params as a Promise
 }
 
+
 export default async function Page({ params }: PageProps) {
-  // Await params before destructuring
-  const { slug } = await params; // Await and destructure slug
+  const { slug } = await params; // Await params
 
   const query = `*[_type == 'post' && slug.current == $slug]{
     title, summary, image, content,
     author->{bio, image, name}
   }[0]`;
 
-  const post = await client.fetch(query, { slug });
+  let post: {
+    title: string;
+    summary?: string;
+    image?: SanityImageSource;
+    content?: PortableTextBlock[];
+    author?: {
+      bio?: string;
+      image?: SanityImageSource;
+      name?: string;
+    };
+  } | null = null;
 
-  if (!post) {
+  try {
+    post = await client.fetch(query, { slug });
+    if (!post) {
+      return (
+        <div className="text-center text-red-500 font-semibold">
+          Post not found
+        </div>
+      );
+    }
+  } catch (error) {
+    console.error("Error fetching post:", error); // For debugging
     return (
       <div className="text-center text-red-500 font-semibold">
-        Post not found
+        An error occurred while fetching the post.
       </div>
     );
   }
@@ -33,10 +51,8 @@ export default async function Page({ params }: PageProps) {
   const imageUrl = post.image ? urlFor(post.image).url() : "/fallback-image.jpg";
 
   return (
-    <article className=" px-4 2xl:px-12 flex flex-col gap-y-8 bg-sky-950 text-white shadow-lg rounded-lg p-6">
-      <h1 className="text-2xl xs:text-4xl lg:text-6xl font-bold">
-        {post.title}
-      </h1>
+    <article className="px-4 2xl:px-12 flex flex-col gap-y-8 bg-sky-950 text-white shadow-lg rounded-lg p-6">
+      <h1 className="text-2xl xs:text-4xl lg:text-6xl font-bold">{post.title}</h1>
       <Image
         src={imageUrl}
         width={500}
@@ -56,28 +72,16 @@ export default async function Page({ params }: PageProps) {
             />
           )}
           <div className="flex flex-col gap-1">
-            <h3 className="text-xl font-bold">
-              {post.author.name || "Unknown Author"}
-            </h3>
+            <h3 className="text-xl font-bold">{post.author?.name ?? "Unknown Author"}</h3>
             <p className="italic text-xs xs:text-sm sm:text-base text-gray-400">
-              {post.author.bio || "No bio available"}
+              {post.author?.bio ?? "No bio available"}
             </p>
           </div>
         </section>
       )}
       <section className="text-lg leading-normal text-gray-300">
-        <PortableText value={post.content || []} components={components} />
+        <PortableText value={post.content ?? []} components={components} />
       </section>
     </article>
   );
-}
-
-// Generate Static Params for Dynamic Routes
-export async function generateStaticParams() {
-  const query = `*[_type == "post"]{ "slug": slug.current }`;
-  const slugs = await client.fetch(query);
-
-  return slugs.map((post: { slug: string }) => ({
-    slug: post.slug,
-  }));
 }
